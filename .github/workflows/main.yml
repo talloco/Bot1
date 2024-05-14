@@ -1,0 +1,52 @@
+import discord
+from discord.ext import commands
+import requests
+import asyncio
+
+# Configurações do bot
+TOKEN = 'MTIzOTc1MTg2NjcxMjMzMDI3Mg.G9o6BF.CrozdLjfVlHNfjVrnwv6YT45-jsrjtlxwLtt2c'
+TWITCH_CLIENT_ID = '9ona5eca5qa7t79yxxvm0mwypooe9e'
+TWITCH_USER_ID = 'talloc0'
+DISCORD_CHANNEL_ID = '1239755663630925844'
+
+# Variável de teste para simular se o streamer está online ou offline
+is_test_mode = True
+
+# Função para verificar se o streamer está online na Twitch (com modo de teste)
+def is_streamer_live():
+    if is_test_mode:
+        # Simulando o streamer como online
+        return True
+    else:
+        # Lógica real para verificar se o streamer está online na Twitch
+        url = f'https://api.twitch.tv/helix/streams?user_id={TWITCH_USER_ID}'
+        headers = {'Client-ID': TWITCH_CLIENT_ID}
+        response = requests.get(url, headers=headers)
+        data = response.json()
+        return len(data['data']) > 0
+
+# Inicialização do bot
+bot = commands.Bot(command_prefix='!')
+
+# Evento de inicialização do bot
+@bot.event
+async def on_ready():
+    print(f'Bot conectado como {bot.user}')
+    # Chamando a função para verificar o status do streamer
+    await check_streamer_status()
+
+# Função para verificar periodicamente se o streamer está online
+async def check_streamer_status():
+    channel = bot.get_channel(DISCORD_CHANNEL_ID)
+    while not bot.is_closed():
+        if is_streamer_live():
+            # Se o streamer estiver online, enviar uma mensagem com foto, status e nome personalizado
+            await channel.send('O streamer está ao vivo!')
+            await channel.send('Foto do Streamer:')
+            await channel.send('https://url_da_sua_foto')
+            await channel.send('Status do Streamer: Jogando um jogo incrível!')
+            await channel.send('Nome do Streamer: Seu Nome')
+        await asyncio.sleep(60)  # Verificar a cada 60 segundos
+
+# Rodando o bot
+bot.run(TOKEN)
